@@ -41,7 +41,8 @@ if __name__ == "__main__":
         "num_epoch": NUM_EPOCH,
         "batch_size": BATCH_SIZE,
         # "optimizee": optimizee.cifar.CifarSpikingResNet18
-        "optimizee": optimizee.mnist.SpikingMnistConvModel
+        "optimizee": optimizee.mnist.SpikingMnistConvModel,
+        "optimizer": torch.optim.Adam
     }
 
 
@@ -67,7 +68,6 @@ if __name__ == "__main__":
     benchmark_loss_hist, _ = np.load("benchmark_loss_hist.npy")
     # print(benchmark_loss_hist)
 
-    optimizer = torch.optim.Adam
     # benchmark_loss_hist = train_benchmark(benchmark_train_args, optimizer, device)
 
     # np.save("benchmark_loss_hist.npy", benchmark_loss_hist)

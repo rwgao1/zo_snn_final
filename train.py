@@ -100,7 +100,6 @@ def train_update_rnn(train_args, device):
                     model.zero_grad()
                     loss.backward(retain_graph=True)
 
-
                     meta_model = meta_optimizer.local_zo_meta_update(model)
 
                     # Compute a loss for a step the meta nn_optimizer using LocalZO
@@ -205,7 +204,7 @@ def train_benchmark(train_args, optimizer, device):
     num_epoch = train_args["num_epoch"]
     batch_size = train_args["batch_size"]
     model = train_args["optimizee"]().to(device)
-    optimizer = optimizer(model.parameters(), lr=1e-3)
+    optimizer = train_args["optimizer"](model.parameters(), lr=1e-3)
 
     train_loader, test_loader = model.dataset_loader(batch_size=batch_size, test_batch_size=batch_size)
 
