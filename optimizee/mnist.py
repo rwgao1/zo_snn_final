@@ -124,21 +124,50 @@ class SpikingMnistModel(optimizee.Optimizee):
         mnist_train = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
         mnist_test = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
 
-        train_loader = DataLoader(mnist_train, batch_size=batch_size, shuffle=True, drop_last=True)
-        test_loader = DataLoader(mnist_test, batch_size=test_batch_size, shuffle=True, drop_last=True)
+        train_loader = DataLoader(mnist_train, batch_size=batch_size, shuffle=False, drop_last=True)
+        test_loader = DataLoader(mnist_test, batch_size=test_batch_size, shuffle=False, drop_last=True)
 
         return train_loader, test_loader
 
     def loss(self, spk_rec, tgt):
         loss = self.loss(spk_rec, tgt)
         return loss
+    
 
-
-class MnistLinearModel(SpikingMnistModel):
+class MnistLinearModel20(SpikingMnistModel):
     '''A MLP on dataset MNIST.'''
 
     def __init__(self):
-        super(MnistLinearModel, self).__init__()
+        super(MnistLinearModel20, self).__init__()
+        spike_grad = local_zo(delta=0.6, q=1)
+
+        self.linear1 = nn.Linear(28 * 28, 20)
+        self.linear2 = nn.Linear(20, 10)
+
+        self.lif = [snn.Leaky(beta=0.95, spike_grad=spike_grad, init_hidden=True).to('cuda') for _ in range(2)]
+
+
+    def forward(self, inputs):
+        for lif in self.lif:
+            lif.init_leaky()
+        spk_rec = []
+
+        for i in range(25):
+            out = inputs.view(-1, 28 * 28)
+            out = F.relu(self.linear1(out))
+            out = self.lif[0](out)
+            out = self.linear2(out)
+            out = self.lif[1](out)
+            spk_rec.append(out)
+        
+        return torch.stack(spk_rec)
+
+
+class MnistLinearModel40(SpikingMnistModel):
+    '''A MLP on dataset MNIST.'''
+
+    def __init__(self):
+        super(MnistLinearModel40, self).__init__()
         spike_grad = local_zo(delta=0.6, q=1)
 
         self.linear1 = nn.Linear(28 * 28, 40)
@@ -158,6 +187,38 @@ class MnistLinearModel(SpikingMnistModel):
             out = self.lif[0](out)
             out = self.linear2(out)
             out = self.lif[1](out)
+            spk_rec.append(out)
+        
+        return torch.stack(spk_rec)
+    
+
+class MnistLinearModel2(SpikingMnistModel):
+    '''A MLP on dataset MNIST.'''
+
+    def __init__(self):
+        super(MnistLinearModel2, self).__init__()
+        spike_grad = local_zo(delta=0.6, q=1)
+
+        self.linear1 = nn.Linear(28 * 28, 20)
+        self.linear2 = nn.Linear(20, 20)
+        self.linear3 = nn.Linear(20, 10)
+
+        self.lif = [snn.Leaky(beta=0.95, spike_grad=spike_grad, init_hidden=True).to('cuda') for _ in range(3)]
+
+
+    def forward(self, inputs):
+        for lif in self.lif:
+            lif.init_leaky()
+        spk_rec = []
+
+        for i in range(25):
+            out = inputs.view(-1, 28 * 28)
+            out = F.relu(self.linear1(out))
+            out = self.lif[0](out)
+            out = F.relu(self.linear2(out))
+            out = self.lif[1](out)
+            out = self.linear3(out)
+            out = self.lif[2](out)
             spk_rec.append(out)
         
         return torch.stack(spk_rec)

@@ -75,7 +75,41 @@ class CifarModel(optimizee.Optimizee):
     def loss(self, fx, tgt):
         loss = self.loss(fx, tgt)
         return loss
+
+
+class SpikingCifarConvModel(CifarModel):
+    def __init__(self):
+        super(SpikingCifarConvModel, self).__init__()
+        spike_grad = local_zo(delta=0.6, q=1)
+
+        self.conv1 = nn.Conv2d(3, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(5 * 5 * 50, 500)
+        self.fc2 = nn.Linear(500, 10)
+        self.lif = [snn.Leaky(beta=0.95, spike_grad=spike_grad, init_hidden=True).to('cuda') for _ in range(4)]
+
+
+    def forward(self, x):
+        for lif in self.lif:
+            lif.init_leaky()
+        spk_rec = []
+        for i in range(25):
+            out = F.relu(self.conv1(x))
+            out = F.max_pool2d(out, 2, 2)
+            out = self.lif[0](out)
+            out = F.relu(self.conv2(out))
+            out = F.max_pool2d(out, 2, 2)
+            out = self.lif[1](out)
+            out = out.view(-1, 5 * 5 * 50)
+            out = F.relu(self.fc1(out))
+            out = self.lif[2](out)
+            out = self.fc2(out)
+            out = self.lif[3](out)
+            spk_rec.append(out)
+
+        return torch.stack(spk_rec)
     
+
 
 class BasicBlock(nn.Module):
     expansion = 1

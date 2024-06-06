@@ -75,7 +75,8 @@ class ZOOptimizer(nn_optimizer.NNOptimizer):
 
         # Finally, copy values from the meta model to the normal one.
         self.meta_model.copy_params_to(model)
-        return self.meta_model.model, loss, f_x
+        # return self.meta_model.model, loss, f_x
+        return self.meta_model.model
 
 
     # using bp gradient from LocalZO
