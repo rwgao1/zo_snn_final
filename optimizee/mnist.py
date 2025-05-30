@@ -22,6 +22,7 @@ def local_zo(delta=0.05, q=1):
 
 
 class LocalZO(torch.autograd.Function):
+    total_forward = 0
     @staticmethod
     def forward(ctx, input_, delta=0.05, q=1):
         # print("LocalZO forward")
@@ -34,6 +35,8 @@ class LocalZO(torch.autograd.Function):
         ctx.save_for_backward(grad)
         out = (input_ > 0).float()
         
+        LocalZO.total_forward += 1
+
         return out
     
 
@@ -139,12 +142,12 @@ class MnistLinearModel20(SpikingMnistModel):
 
     def __init__(self):
         super(MnistLinearModel20, self).__init__()
-        spike_grad = local_zo(delta=0.6, q=1)
+        self.spike_grad = local_zo(delta=0.6, q=1)
 
         self.linear1 = nn.Linear(28 * 28, 20)
         self.linear2 = nn.Linear(20, 10)
 
-        self.lif = [snn.Leaky(beta=0.95, spike_grad=spike_grad, init_hidden=True).to('cuda') for _ in range(2)]
+        self.lif = [snn.Leaky(beta=0.95, spike_grad=self.spike_grad, init_hidden=True).to('cuda') for _ in range(2)]
 
 
     def forward(self, inputs):
@@ -160,6 +163,7 @@ class MnistLinearModel20(SpikingMnistModel):
             out = self.lif[1](out)
             spk_rec.append(out)
         
+        print(LocalZO.total_forward)
         return torch.stack(spk_rec)
 
 
@@ -220,7 +224,8 @@ class MnistLinearModel2(SpikingMnistModel):
             out = self.linear3(out)
             out = self.lif[2](out)
             spk_rec.append(out)
-        
+        # print(LocalZO.total_forward)
+
         return torch.stack(spk_rec)
 
 
@@ -254,6 +259,7 @@ class SpikingMnistConvModel(SpikingMnistModel):
             out = self.fc2(out)
             out = self.lif[3](out)
             spk_rec.append(out)
+        # print(LocalZO.total_forward)
 
         return torch.stack(spk_rec)
 

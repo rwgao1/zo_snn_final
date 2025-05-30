@@ -57,7 +57,7 @@ class ZOOptimizer(nn_optimizer.NNOptimizer):
         loss = model.loss(f_x, target)
 
         self.step += 1
-
+        # print(model.get_params().shape())
         flat_grads = torch.zeros_like(model.get_params())
         for _ in range(self.q):
             u = torch.randn_like(model.get_params())  # sampled query direction
@@ -92,6 +92,9 @@ class ZOOptimizer(nn_optimizer.NNOptimizer):
         delta = self(inputs)
         
         flat_params = flat_params + delta
+        # flat_params = flat_params * 2
+
+        # flat_params
 
         self.meta_model.set_flat_params(flat_params)
         self.meta_model.copy_params_to(model)

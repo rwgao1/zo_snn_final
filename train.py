@@ -9,7 +9,7 @@ import optimizee
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+from torchviz import make_dot
 
 
 def cycle(iterable):
@@ -109,7 +109,6 @@ def train_update_rnn(train_args, device):
                     spk_rec = meta_model(data)
                     loss = meta_model.loss(spk_rec, target)
 
-                    # loss_sum += (k * truncated_bptt_step + j) * (loss - Variable(prev_loss))
                     loss_sum += loss - Variable(prev_loss)
                     print(loss_sum.item())
                     optimizee_loss_paths.append(loss_sum.item())
